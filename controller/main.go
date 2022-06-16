@@ -136,6 +136,7 @@ func main() {
 	var (
 		port   = flag.Int("port", 7472, "HTTP listening port for Prometheus metrics")
 		config = flag.String("config", "config", "Kubernetes ConfigMap containing MetalLB's configuration")
+		svcns  = flag.String("svcns", v1.NamespaceAll, "Load balancer service namespace, default is empty for all")
 	)
 	flag.Parse()
 
@@ -148,6 +149,7 @@ func main() {
 	client, err := k8s.New(&k8s.Config{
 		ProcessName:   "metallb-controller",
 		ConfigMapName: *config,
+		SvcNamespace:  *svcns,
 		MetricsPort:   *port,
 		Logger:        logger,
 

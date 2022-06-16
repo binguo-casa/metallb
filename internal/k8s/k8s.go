@@ -68,6 +68,7 @@ const (
 type Config struct {
 	ProcessName   string
 	ConfigMapName string
+	SvcNamespace  string
 	NodeName      string
 	MetricsHost   string
 	MetricsPort   int
@@ -139,7 +140,8 @@ func New(cfg *Config) (*Client, error) {
 				}
 			},
 		}
-		svcWatcher := cache.NewListWatchFromClient(c.client.CoreV1().RESTClient(), "services", v1.NamespaceAll, fields.Everything())
+		svcNamespace := cfg.SvcNamespace // default v1.NamespaceAll
+		svcWatcher := cache.NewListWatchFromClient(c.client.CoreV1().RESTClient(), "services", svcNamespace, fields.Everything())
 		c.svcIndexer, c.svcInformer = cache.NewIndexerInformer(svcWatcher, &v1.Service{}, 0, svcHandlers, cache.Indexers{})
 
 		c.serviceChanged = cfg.ServiceChanged
