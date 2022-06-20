@@ -83,6 +83,7 @@ type Config struct {
 	ProcessName     string
 	ConfigMapName   string
 	ConfigMapNS     string
+	SvcNamespace    string
 	NodeName        string
 	MetricsHost     string
 	MetricsPort     int
@@ -169,7 +170,8 @@ func New(cfg *Config) (*Client, error) {
 				}
 			},
 		}
-		svcWatcher := cache.NewListWatchFromClient(c.client.CoreV1().RESTClient(), "services", v1.NamespaceAll, fields.Everything())
+		svcNamespace := cfg.SvcNamespace // default v1.NamespaceAll
+		svcWatcher := cache.NewListWatchFromClient(c.client.CoreV1().RESTClient(), "services", svcNamespace, fields.Everything())
 		c.svcIndexer, c.svcInformer = cache.NewIndexerInformer(svcWatcher, &v1.Service{}, 0, svcHandlers, cache.Indexers{})
 
 		c.serviceChanged = cfg.ServiceChanged
@@ -198,7 +200,7 @@ func New(cfg *Config) (*Client, error) {
 						}
 					},
 				}
-				epWatcher := cache.NewListWatchFromClient(c.client.CoreV1().RESTClient(), "endpoints", v1.NamespaceAll, fields.Everything())
+				epWatcher := cache.NewListWatchFromClient(c.client.CoreV1().RESTClient(), "endpoints", svcNamespace, fields.Everything())
 				c.epIndexer, c.epInformer = cache.NewIndexerInformer(epWatcher, &v1.Endpoints{}, 0, epHandlers, cache.Indexers{})
 
 				c.syncFuncs = append(c.syncFuncs, c.epInformer.HasSynced)
@@ -245,7 +247,7 @@ func New(cfg *Config) (*Client, error) {
 						c.queue.Add(svcKey(key))
 					},
 				}
-				slicesWatcher := cache.NewListWatchFromClient(c.client.DiscoveryV1beta1().RESTClient(), "endpointslices", v1.NamespaceAll, fields.Everything())
+				slicesWatcher := cache.NewListWatchFromClient(c.client.DiscoveryV1beta1().RESTClient(), "endpointslices", svcNamespace, fields.Everything())
 				c.slicesIndexer, c.slicesInformer = cache.NewIndexerInformer(slicesWatcher, &discovery.EndpointSlice{}, 0, slicesHandlers, cache.Indexers{
 					slicesServiceIndexName: slicesServiceIndex,
 				})

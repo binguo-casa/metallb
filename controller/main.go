@@ -124,6 +124,7 @@ func main() {
 	var (
 		port            = flag.Int("port", 7472, "HTTP listening port for Prometheus metrics")
 		config          = flag.String("config", "config", "Kubernetes ConfigMap containing MetalLB's configuration")
+		svcns           = flag.String("svcns", v1.NamespaceAll, "Load balancer service namespace, default is empty for all")
 		namespace       = flag.String("namespace", os.Getenv("METALLB_NAMESPACE"), "config / memberlist secret namespace")
 		kubeconfig      = flag.String("kubeconfig", "", "absolute path to the kubeconfig file (only needed when running outside of k8s)")
 		mlSecret        = flag.String("ml-secret-name", os.Getenv("METALLB_ML_SECRET_NAME"), "name of the memberlist secret to create")
@@ -166,6 +167,7 @@ func main() {
 		DisableEpSlices: *disableEpSlices,
 
 		ServiceChanged: c.SetBalancer,
+		SvcNamespace:   *svcns,
 		ConfigChanged:  c.SetConfig,
 		ValidateConfig: metallbcfg.DontValidate, // the controller is not aware of the mode, we defer the validation to the speaker
 		Synced:         c.MarkSynced,
