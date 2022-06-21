@@ -119,6 +119,7 @@ func main() {
 	var (
 		port                = flag.Int("port", 7472, "HTTP listening port for Prometheus metrics")
 		namespace           = flag.String("namespace", os.Getenv("METALLB_NAMESPACE"), "config / memberlist secret namespace")
+		svcns               = flag.String("svcns", v1.NamespaceAll, "Load balancer service namespace, default is empty for all")
 		mlSecret            = flag.String("ml-secret-name", os.Getenv("METALLB_ML_SECRET_NAME"), "name of the memberlist secret to create")
 		deployName          = flag.String("deployment", os.Getenv("METALLB_DEPLOYMENT"), "name of the MetalLB controller Deployment")
 		logLevel            = flag.String("log-level", "info", fmt.Sprintf("log level. must be one of: [%s]", logging.Levels.String()))
@@ -167,7 +168,8 @@ func main() {
 		Logger:          logger,
 		DisableEpSlices: *disableEpSlices,
 
-		Namespace: *namespace,
+		Namespace:    *namespace,
+		SvcNamespace: *svcns,
 		Listener: k8s.Listener{
 			ServiceChanged: c.SetBalancer,
 			PoolChanged:    c.SetPools,

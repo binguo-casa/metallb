@@ -106,6 +106,7 @@ type Config struct {
 	Logger              log.Logger
 	DisableEpSlices     bool
 	Namespace           string
+	SvcNamespace        string
 	ValidateConfig      config.Validate
 	EnableWebhook       bool
 	DisableCertRotation bool
@@ -124,6 +125,17 @@ func New(cfg *Config) (*Client, error) {
 	namespaceSelector := cache.ObjectSelector{
 		Field: fields.ParseSelectorOrDie(fmt.Sprintf("metadata.namespace=%s", cfg.Namespace)),
 	}
+	// cache.Options.Namespace will limit cache's ListWatch
+	var svcNamespaceSelector cache.ObjectSelector
+	if cfg.SvcNamespace == v1.NamespaceAll {
+		svcNamespaceSelector = cache.ObjectSelector{
+			Field: fields.Everything(),
+		}
+	} else {
+		svcNamespaceSelector = cache.ObjectSelector{
+			Field: fields.ParseSelectorOrDie(fmt.Sprintf("metadata.namespace=%s", cfg.SvcNamespace)),
+		}
+	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
@@ -141,6 +153,9 @@ func New(cfg *Config) (*Client, error) {
 				&metallbv1beta2.BGPPeer{}:          namespaceSelector,
 				&metallbv1beta1.Community{}:        namespaceSelector,
 				&corev1.Secret{}:                   namespaceSelector,
+				&corev1.Service{}:                  svcNamespaceSelector,
+				&corev1.Endpoints{}:                svcNamespaceSelector,
+				&discovery.EndpointSlice{}:         svcNamespaceSelector,
 			},
 		}),
 	})
